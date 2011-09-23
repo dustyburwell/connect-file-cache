@@ -21,17 +21,19 @@ class ConnectFileCache
   middleware: (req, res, next) =>
     return next() unless req.method is 'GET'
     route = parse(req.url).pathname
-    console.log "#{route} = route"
     if @map[route]
       @serveBuffer req, res, next, route
-    else
+    else if @options.src
       filePath = path.join process.cwd(), @options.src, route
       self = this
       fs.stat filePath, (err, stats) ->
         return next() if err
         fs.readFile filePath, (err, data) ->
+          throw err if err
           self.map[route] = {data, flags: {}}
           self.serveBuffer req, res, next, route
+    else
+      next()
 
   serveBuffer: (req, res, next, route) ->
     {data, flags} = @map[route]
