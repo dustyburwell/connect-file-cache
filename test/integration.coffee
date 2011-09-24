@@ -59,11 +59,14 @@ exports['Cache is invalidated when file has changed'] = (test) ->
       fs.writeFileSync '../test_fixtures/raven-quoth.html', 'Evermore'
       test.done()
 
-exports['Files are gzip-compressed if supported'] = (test) ->
-  options =
-    url: 'http://localhost:3688/popeye-zen.txt'
-    headers: {'Accept-Encoding': 'gzip'}
-  request options, (err, res, body) ->
-    test.equals body, 'I am what I am.'
-    test.equals res.headers['content-encoding'], 'gzip'
-    test.done()
+exports['Files are gzip-compressed if (and only if) supported'] = (test) ->
+  request 'http://localhost:3688/lorem.txt', (err, res, originalBody) ->
+    test.ok !res.headers['content-encoding']
+
+    options =
+      url: 'http://localhost:3688/lorem.txt'
+      headers: {'Accept-Encoding': 'gzip'}
+    request options, (err, res, gzippedBody) ->
+      test.ok gzippedBody.length < originalBody.length
+      test.equals res.headers['content-encoding'], 'gzip'
+      test.done()

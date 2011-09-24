@@ -40,7 +40,7 @@ class ConnectFileCache
         fs.readFile filePath, (err, data) =>
           throw err if err
           @map[route] or= {}
-          gzippedData = gzipcompress data
+          gzippedData = gzip data
           _.extend @map[route], {data, gzippedData, mtime: stats.mtime}
           callback()
 
@@ -65,15 +65,17 @@ class ConnectFileCache
 
     if req.headers['accept-encoding']?.indexOf /gzip/
       res.setHeader 'Content-Encoding', 'gzip'
+      res.setHeader 'Content-Length', cacheHash.gzippedData.length
       res.end cacheHash.gzippedData
     else
+      res.setHeader 'Content-Length', cacheHash.data.length
       res.end cacheHash.data
 
   # Manage data directly, without physical files
   set: (routes, data, flags = {}) ->
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
-    gzippedData = gzipcompress data
+    gzippedData = gzip data
     mtime = new Date()
     for route in routes
       flags = _.extend {}, flags
@@ -95,3 +97,5 @@ FAR_FUTURE_EXPIRES = "Wed, 01 Feb 2034 12:34:56 GMT"
 normalizeRoute = (route) ->
   route = "/#{route}" unless route[0] is '/'
   route
+
+gzip = (data) -> gzipcompress data
