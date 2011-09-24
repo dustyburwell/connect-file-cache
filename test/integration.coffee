@@ -31,10 +31,13 @@ exports['Cache is invalidated when file has changed'] = (test) ->
     test.equals body, 'Evermore'
     test.equals res.headers['content-type'], 'text/html'
     test.equals cache.get('/raven-quoth.html').toString('utf8'), 'Evermore'
+    mtime1 = cache.map['/raven-quoth.html'].mtime
     fs.writeFileSync '../test_fixtures/raven-quoth.html', 'Nevermore'
 
     request 'http://localhost:3688/raven-quoth.html', (err, res, body) ->
       test.equals body, 'Nevermore'
       test.equals cache.get('/raven-quoth.html').toString('utf8'), 'Nevermore'
+      mtime2 = cache.map['/raven-quoth.html'].mtime
+      test.ok mtime2 > mtime1
       fs.writeFileSync '../test_fixtures/raven-quoth.html', 'Evermore'
       test.done()

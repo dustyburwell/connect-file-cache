@@ -40,7 +40,7 @@ class ConnectFileCache
         fs.readFile filePath, (err, data) =>
           throw err if err
           @map[route] or= {}
-          _.extend @map[route], {data}
+          _.extend @map[route], {data, mtime: stats.mtime}
           callback filePath
 
   serveBuffer: (req, res, next, {route}) ->

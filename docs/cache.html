@@ -28,7 +28,7 @@
         <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span> <span class="nx">filePath</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span>
           <span class="k">throw</span> <span class="nx">err</span> <span class="k">if</span> <span class="nx">err</span>
           <span class="nx">@map</span><span class="p">[</span><span class="nx">route</span><span class="p">]</span> <span class="o">or=</span> <span class="p">{}</span>
-          <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span> <span class="nx">@map</span><span class="p">[</span><span class="nx">route</span><span class="p">],</span> <span class="p">{</span><span class="nx">data</span><span class="p">}</span>
+          <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span> <span class="nx">@map</span><span class="p">[</span><span class="nx">route</span><span class="p">],</span> <span class="p">{</span><span class="nx">data</span><span class="p">,</span> <span class="nv">mtime: </span><span class="nx">stats</span><span class="p">.</span><span class="nx">mtime</span><span class="p">}</span>
           <span class="nx">callback</span> <span class="nx">filePath</span>
 
   <span class="nv">serveBuffer: </span><span class="nf">(req, res, next, {route}) -&gt;</span>
