@@ -35,18 +35,25 @@ class ConnectFileCache
       return callback() if err  # no matching file exists
       cacheTimestamp = @map[route]?.mtime
       if cacheTimestamp and (stats.mtime <= cacheTimestamp)
-        callback filePath
+        callback()
       else
         fs.readFile filePath, (err, data) =>
           throw err if err
           @map[route] or= {}
           _.extend @map[route], {data, mtime: stats.mtime}
-          callback filePath
+          callback()
 
   serveBuffer: (req, res, next, {route}) ->
-    {data, flags} = _.defaults @map[route], flags: {}
+    {data, flags, mtime: cacheTimestamp} = _.defaults @map[route], flags: {}
+    if cacheTimestamp and req.headers['if-modified-since']
+      clientTimestamp = new Date(req.headers['if-modified-since'])
+      unless isNaN clientTimestamp.getTime()
+        unless cacheTimestamp > clientTimestamp
+          res.statusCode = 304
+          return res.end()
     res.setHeader 'Content-Type', flags.mime ? mime.lookup(route)
     res.setHeader 'Expires', FAR_FUTURE_EXPIRES if flags.expires is false
+    res.setHeader 'Last-Modified', cacheTimestamp.toUTCString()
     if flags.attachment is true
       filename = path.basename(route)
       contentDisposition = 'attachment; filename="' + filename + '"'
@@ -57,8 +64,9 @@ class ConnectFileCache
   set: (routes, data, flags = {}) ->
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
+    mtime = new Date()
     for route in routes
-      @map[normalizeRoute route] = {data, flags: _.extend {}, flags}
+      @map[normalizeRoute route] = {data, flags: _.extend({}, flags), mtime}
     @
 
   remove: (routes) ->
