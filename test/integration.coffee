@@ -58,3 +58,12 @@ exports['Cache is invalidated when file has changed'] = (test) ->
       test.ok mtime2 > mtime1
       fs.writeFileSync '../test_fixtures/raven-quoth.html', 'Evermore'
       test.done()
+
+exports['Files are gzip-compressed if supported'] = (test) ->
+  options =
+    url: 'http://localhost:3688/popeye-zen.txt'
+    headers: {'Accept-Encoding': 'gzip'}
+  request options, (err, res, body) ->
+    test.equals body, 'I am what I am.'
+    test.equals res.headers['content-encoding'], 'gzip'
+    test.done()

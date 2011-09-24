@@ -11,7 +11,8 @@
   "main": "lib/cache.js",
   "dependencies": {
     "mime": "1.2.2",
-    "underscore": "1.1.7"
+    "underscore": "1.1.7",
+    "zlib-sync": "0.0.1"
   },
   "devDependencies": {
     "coffee-script": "1.1.2",

@@ -1,16 +1,16 @@
 # [connect-file-cache](http://github.com/TrevorBurnham/connect-file-cache)
 
-fs      = require 'fs'
-mime    = require 'mime'
-path    = require 'path'
-_       = require 'underscore'
-{parse} = require 'url'
-
-module.exports = (options = {}) -> new ConnectFileCache(options)
+fs             = require 'fs'
+mime           = require 'mime'
+path           = require 'path'
+_              = require 'underscore'
+{parse}        = require 'url'
+{gzipcompress} = require 'zlib-sync'
 
 # options:
 # * `src`: A dir containing files to be served directly (defaults to `null`)
 # * `routePrefix`: Data will be served from this path (defaults to `/`)
+module.exports = (options = {}) -> new ConnectFileCache(options)
 
 class ConnectFileCache
   constructor: (@options, @map = {}) ->
@@ -40,17 +40,21 @@ class ConnectFileCache
         fs.readFile filePath, (err, data) =>
           throw err if err
           @map[route] or= {}
-          _.extend @map[route], {data, mtime: stats.mtime}
+          gzippedData = gzipcompress data
+          _.extend @map[route], {data, gzippedData, mtime: stats.mtime}
           callback()
 
   serveBuffer: (req, res, next, {route}) ->
-    {data, flags, mtime: cacheTimestamp} = _.defaults @map[route], flags: {}
+    cacheHash = @map[route]
+    cacheTimestamp = cacheHash.mtime
     if cacheTimestamp and req.headers['if-modified-since']
       clientTimestamp = new Date(req.headers['if-modified-since'])
       unless isNaN clientTimestamp.getTime()
         unless cacheTimestamp > clientTimestamp
           res.statusCode = 304
           return res.end()
+
+    {flags} = _.defaults cacheHash, flags: {}
     res.setHeader 'Content-Type', flags.mime ? mime.lookup(route)
     res.setHeader 'Expires', FAR_FUTURE_EXPIRES if flags.expires is false
     res.setHeader 'Last-Modified', cacheTimestamp.toUTCString()
@@ -58,15 +62,22 @@ class ConnectFileCache
       filename = path.basename(route)
       contentDisposition = 'attachment; filename="' + filename + '"'
       res.setHeader 'Content-Disposition', contentDisposition
-    res.end data
+
+    if req.headers['accept-encoding']?.indexOf /gzip/
+      res.setHeader 'Content-Encoding', 'gzip'
+      res.end cacheHash.gzippedData
+    else
+      res.end cacheHash.data
 
   # Manage data directly, without physical files
   set: (routes, data, flags = {}) ->
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
+    gzippedData = gzipcompress data
     mtime = new Date()
     for route in routes
-      @map[normalizeRoute route] = {data, flags: _.extend({}, flags), mtime}
+      flags = _.extend {}, flags
+      @map[normalizeRoute route] = {data, gzippedData, flags, mtime}
     @
 
   remove: (routes) ->

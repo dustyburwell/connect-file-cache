@@ -8,6 +8,8 @@ If you're just serving files, Connect's own [static](http://senchalabs.github.co
 
 That's the use case connect-file-cache was born out of. It's designed to be very fast. The "files" it serves don't have to exist on disk at all. On the other hand, it's not suitable for serving large files (or many), because *all files are stored in memory.*
 
+**Bonus:** connect-file-cache also does gzip (when requested)!
+
 ## How do I use it?
 
 Install:
@@ -31,7 +33,7 @@ You can map routes directly to strings like so:
 
 Then go to `yourapp/foo/bar.txt` in your browser.
 
-## setitional Features
+## Additional Features
 
 You can map multiple routes by passing in an array as the first argument:
 
