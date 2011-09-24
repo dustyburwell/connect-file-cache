@@ -21,22 +21,30 @@ class ConnectFileCache
   middleware: (req, res, next) =>
     return next() unless req.method is 'GET'
     route = parse(req.url).pathname
-    if @map[route]
-      @serveBuffer req, res, next, route
-    else if @options.src
-      filePath = path.join process.cwd(), @options.src, route
-      self = this
-      fs.stat filePath, (err, stats) ->
-        return next() if err
-        fs.readFile filePath, (err, data) ->
-          throw err if err
-          self.map[route] = {data, flags: {}}
-          self.serveBuffer req, res, next, route
-    else
-      next()
+    @loadFile route, =>
+      if @map[route]
+        @serveBuffer req, res, next, {route}
+      else
+        next()
 
-  serveBuffer: (req, res, next, route) ->
-    {data, flags} = @map[route]
+  # If a file corresponding to the given route exists, load it in the cache
+  loadFile: (route, callback) ->
+    callback() unless @options.src
+    filePath = path.join process.cwd(), @options.src, route
+    fs.stat filePath, (err, stats) =>
+      return callback() if err  # no matching file exists
+      cacheTimestamp = @map[route]?.mtime
+      if cacheTimestamp and (stats.mtime <= cacheTimestamp)
+        callback filePath
+      else
+        fs.readFile filePath, (err, data) =>
+          throw err if err
+          @map[route] or= {}
+          _.extend @map[route], {data}
+          callback filePath
+
+  serveBuffer: (req, res, next, {route}) ->
+    {data, flags} = _.defaults @map[route], flags: {}
     res.setHeader 'Content-Type', flags.mime ? mime.lookup(route)
     res.setHeader 'Expires', FAR_FUTURE_EXPIRES if flags.expires is false
     if flags.attachment is true
