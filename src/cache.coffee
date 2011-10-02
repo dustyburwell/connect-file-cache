@@ -76,7 +76,7 @@ class ConnectFileCache
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
     gzippedData = gzip data
-    mtime = new Date()
+    mtime = flags.mtime ? new Date()
     for route in routes
       flags = _.extend {}, flags
       @map[normalizeRoute route] = {data, gzippedData, flags, mtime}
@@ -88,7 +88,10 @@ class ConnectFileCache
     @
 
   get: (route) ->
-    @map[normalizeRoute route].data
+    @map[normalizeRoute route]?.data
+
+  getMtime: (route) ->
+    @map[normalizeRoute route]?.mtime
 
 # constants
 FAR_FUTURE_EXPIRES = "Wed, 01 Feb 2034 12:34:56 GMT"
