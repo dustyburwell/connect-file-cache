@@ -2,7 +2,7 @@
   "author": "Trevor Burnham (http://trevorburnham.com)",
   "name": "connect-file-cache",
   "description": "A Connect middleware for mapping routes to memory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "homepage": "http://github.com/TrevorBurnham/connect-file-cache",
   "repository": {
     "type": "git",
