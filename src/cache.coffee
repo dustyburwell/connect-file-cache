@@ -29,7 +29,7 @@ class ConnectFileCache
 
   # If a file corresponding to the given route exists, load it in the cache
   loadFile: (route, callback) ->
-    callback() unless @options.src
+    return callback() unless @options.src
     filePath = path.join process.cwd(), @options.src, route
     fs.stat filePath, (err, stats) =>
       return callback() if err  # no matching file exists
