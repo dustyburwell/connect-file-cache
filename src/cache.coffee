@@ -39,9 +39,7 @@ class ConnectFileCache
       else
         fs.readFile filePath, (err, data) =>
           throw err if err
-          @map[route] or= {}
-          gzippedData = gzip data
-          _.extend @map[route], {data, gzippedData, mtime: stats.mtime}
+          @set route, data, mtime: stats.mtime
           callback()
 
   serveBuffer: (req, res, next, {route}) ->
@@ -63,7 +61,7 @@ class ConnectFileCache
       contentDisposition = 'attachment; filename="' + filename + '"'
       res.setHeader 'Content-Disposition', contentDisposition
 
-    if req.headers['accept-encoding']?.indexOf /gzip/
+    if cacheHash.gzippedData and req.headers['accept-encoding']?.indexOf /gzip/
       res.setHeader 'Content-Encoding', 'gzip'
       res.setHeader 'Content-Length', cacheHash.gzippedData.length
       res.end cacheHash.gzippedData
@@ -79,7 +77,9 @@ class ConnectFileCache
     mtime = flags.mtime ? new Date()
     for route in routes
       flags = _.extend {}, flags
-      @map[normalizeRoute route] = {data, gzippedData, flags, mtime}
+      @map[normalizeRoute route] = {data, flags, mtime}
+      if data.length >= MIN_GZIP_SIZE
+        @map[normalizeRoute route].gzippedData = gzip data
     @
 
   remove: (routes) ->
@@ -95,6 +95,7 @@ class ConnectFileCache
 
 # constants
 FAR_FUTURE_EXPIRES = "Wed, 01 Feb 2034 12:34:56 GMT"
+MIN_GZIP_SIZE = 200
 
 # utility functions
 normalizeRoute = (route) ->
