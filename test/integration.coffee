@@ -26,12 +26,28 @@ exports['Files are cached after being served'] = (test) ->
       test.equals res.headers['content-type'], 'text/plain'
       test.done()
 
-exports['Conditional GET can yield a 304 "Not Modified" response'] = (test) ->
+exports['Conditional GET can yield a 304 response for files'] = (test) ->
   request 'http://localhost:3688/popeye-zen.txt', (err, res, body) ->
     mtime = res.headers['last-modified']
 
     options =
       url: 'http://localhost:3688/popeye-zen.txt'
+      headers: {'If-Modified-Since': mtime}
+    request options, (err, res, body) ->
+      test.equals body, ''
+      test.equals res.statusCode, 304
+      test.done()
+
+exports['Conditional GET can yield a 304 response for set data'] = (test) ->
+  cache.set('newroute.txt', 'some text', mtime: new Date)
+
+  request 'http://localhost:3688/newroute.txt', (err, res, body) ->
+    test.equals body, 'some text'
+    test.equals res.statusCode, 200
+    mtime = res.headers['last-modified']
+
+    options =
+      url: 'http://localhost:3688/newroute.txt'
       headers: {'If-Modified-Since': mtime}
     request options, (err, res, body) ->
       test.equals body, ''

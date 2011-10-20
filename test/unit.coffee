@@ -10,7 +10,7 @@ exports['set converts strings to buffers'] = (test) ->
   test.equal cache.get('b').toString('utf8'), 'str2'
   test.done()
 
-exports['set updates cache mtime'] = (test) ->
+exports['set updates cache mtime, rounded to earlier second'] = (test) ->
   cache.set 'c', 'str1'
   mtime1 = cache.map['/c'].mtime
   setTimeout ( ->
@@ -18,4 +18,4 @@ exports['set updates cache mtime'] = (test) ->
     mtime2 = cache.map['/c'].mtime
     test.ok mtime2 > mtime1
     test.done()
-  ), 10
+  ), 1000

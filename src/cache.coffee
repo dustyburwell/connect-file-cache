@@ -74,7 +74,8 @@ class ConnectFileCache
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
     gzippedData = gzip data
-    mtime = flags.mtime ? new Date()
+    millis = 1000 * Math.floor (flags.mtime ? new Date()).getTime() / 1000
+    mtime = new Date(millis)
     for route in routes
       flags = _.extend {}, flags
       @map[normalizeRoute route] = {data, flags, mtime}
