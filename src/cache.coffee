@@ -5,7 +5,7 @@ mime           = require 'mime'
 path           = require 'path'
 _              = require 'underscore'
 {parse}        = require 'url'
-{gzipcompress} = require 'zlib-sync'
+{gzip}         = require 'zlib'
 
 # options:
 # * `src`: A dir containing files to be served directly (defaults to `null`)
@@ -73,14 +73,14 @@ class ConnectFileCache
   set: (routes, data, flags = {}) ->
     routes = [routes] unless routes instanceof Array
     data = new Buffer(data) unless data instanceof Buffer
-    gzippedData = gzip data
     millis = 1000 * Math.floor (flags.mtime ? new Date()).getTime() / 1000
     mtime = new Date(millis)
     for route in routes
       flags = _.extend {}, flags
       @map[normalizeRoute route] = {data, flags, mtime}
       if data.length >= MIN_GZIP_SIZE
-        @map[normalizeRoute route].gzippedData = gzip data
+        gzip data, (err, gzippedData) =>
+          @map[normalizeRoute route].gzippedData = gzippedData
     @
 
   remove: (routes) ->
@@ -102,5 +102,3 @@ MIN_GZIP_SIZE = 200
 normalizeRoute = (route) ->
   route = "/#{route}" unless route[0] is '/'
   route
-
-gzip = (data) -> gzipcompress data
