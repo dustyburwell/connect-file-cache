@@ -3,7 +3,7 @@
 <span class="nv">path           = </span><span class="nx">require</span> <span class="s1">&#39;path&#39;</span>
 <span class="nv">_              = </span><span class="nx">require</span> <span class="s1">&#39;underscore&#39;</span>
 <span class="p">{</span><span class="nx">parse</span><span class="p">}</span>        <span class="o">=</span> <span class="nx">require</span> <span class="s1">&#39;url&#39;</span>
-<span class="p">{</span><span class="nx">gzipcompress</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s1">&#39;zlib-sync&#39;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>options:
+<span class="p">{</span><span class="nx">gzip</span><span class="p">}</span>         <span class="o">=</span> <span class="nx">require</span> <span class="s1">&#39;zlib&#39;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>options:
 * <code>src</code>: A dir containing files to be served directly (defaults to <code>null</code>)
 * <code>routePrefix</code>: Data will be served from this path (defaults to <code>/</code>)</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">module.exports = </span><span class="nf">(options = {}) -&gt;</span> <span class="k">new</span> <span class="nx">ConnectFileCache</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
 
@@ -59,14 +59,14 @@
       <span class="nx">res</span><span class="p">.</span><span class="nx">end</span> <span class="nx">cacheHash</span><span class="p">.</span><span class="nx">data</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Manage data directly, without physical files</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">set: </span><span class="nf">(routes, data, flags = {}) -&gt;</span>
     <span class="nv">routes = </span><span class="p">[</span><span class="nx">routes</span><span class="p">]</span> <span class="nx">unless</span> <span class="nx">routes</span> <span class="k">instanceof</span> <span class="nb">Array</span>
     <span class="nv">data = </span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">data</span> <span class="k">instanceof</span> <span class="nx">Buffer</span>
-    <span class="nv">gzippedData = </span><span class="nx">gzip</span> <span class="nx">data</span>
     <span class="nv">millis = </span><span class="mi">1000</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span> <span class="p">(</span><span class="nx">flags</span><span class="p">.</span><span class="nx">mtime</span> <span class="o">?</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">()).</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span>
     <span class="nv">mtime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">millis</span><span class="p">)</span>
     <span class="k">for</span> <span class="nx">route</span> <span class="k">in</span> <span class="nx">routes</span>
       <span class="nv">flags = </span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span> <span class="p">{},</span> <span class="nx">flags</span>
       <span class="nx">@map</span><span class="p">[</span><span class="nx">normalizeRoute</span> <span class="nx">route</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">data</span><span class="p">,</span> <span class="nx">flags</span><span class="p">,</span> <span class="nx">mtime</span><span class="p">}</span>
       <span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;=</span> <span class="nx">MIN_GZIP_SIZE</span>
-        <span class="nx">@map</span><span class="p">[</span><span class="nx">normalizeRoute</span> <span class="nx">route</span><span class="p">].</span><span class="nv">gzippedData = </span><span class="nx">gzip</span> <span class="nx">data</span>
+        <span class="nx">gzip</span> <span class="nx">data</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">gzippedData</span><span class="p">)</span> <span class="o">=&gt;</span>
+          <span class="nx">@map</span><span class="p">[</span><span class="nx">normalizeRoute</span> <span class="nx">route</span><span class="p">].</span><span class="nv">gzippedData = </span><span class="nx">gzippedData</span>
     <span class="err">@</span>
 
   <span class="nv">remove: </span><span class="nf">(routes) -&gt;</span>
@@ -82,7 +82,5 @@
 <span class="nv">MIN_GZIP_SIZE = </span><span class="mi">200</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>utility functions</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">normalizeRoute = </span><span class="nf">(route) -&gt;</span>
   <span class="nv">route = </span><span class="s2">&quot;/#{route}&quot;</span> <span class="nx">unless</span> <span class="nx">route</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">is</span> <span class="s1">&#39;/&#39;</span>
   <span class="nx">route</span>
-
-<span class="nv">gzip = </span><span class="nf">(data) -&gt;</span> <span class="nx">gzipcompress</span> <span class="nx">data</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
