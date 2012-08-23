@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/TrevorBurnham/connect-file-cache.png)](http://travis-ci.org/TrevorBurnham/connect-file-cache)
 # connect-file-cache
 
 A static cache middleware for [Connect](http://senchalabs.github.com/connect/) spun off from [connect-assets](http://github.com/TrevorBurnham/connect-assets). Written in [CoffeeScript](http://coffeescript.org) by the author of [CoffeeScript: Accelerated JavaScript Development](http://pragprog.com/book/tbcoffee/coffeescript).
