@@ -86,3 +86,12 @@ exports['Files are gzip-compressed if (and only if) supported'] = (test) ->
       test.ok gzippedBody.length < originalBody.length
       test.equals res.headers['content-encoding'], 'gzip'
       test.done()
+
+  request 'http://localhost:3688/lorem.txt', (err, res, originalBody) ->
+    test.ok !res.headers['content-encoding']
+
+    options =
+      url: 'http://localhost:3688/lorem.txt'
+    request options, (err, res, gzippedBody) ->
+      test.notEqual res.headers['content-encoding'], 'gzip'
+      test.done()
