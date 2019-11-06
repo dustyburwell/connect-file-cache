@@ -13,7 +13,7 @@
   },
   "main": "lib/cache.js",
   "dependencies": {
-    "mime": "1.2.2",
+    "mime": "2.4.4",
     "underscore": "1.1.7"
   },
   "devDependencies": {
